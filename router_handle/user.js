@@ -34,7 +34,7 @@ exports.regUser = (req,res)=>{
         })
     })
 }
-//登录
+//用户登录
 exports.login = (req,res)=>{
     let err = validationResult(req);
     if(!err.isEmpty()) return res.mt(err.mapped())
@@ -49,6 +49,30 @@ exports.login = (req,res)=>{
         const user = {...results[0],password:'',residual:''}
 		// 生成token
         const tokenStr = jwt.sign(user,config.jwtSecretKey,{
+            expiresIn:'2h'
+        })
+        res.send({
+            status:0,
+            message:'登陆成功！',
+            token:'Bearer ' + tokenStr
+        })
+    })
+}
+//管理员登录
+exports.adminLogin = (req,res)=>{
+    let err = validationResult(req);
+    if(!err.isEmpty()) return res.mt(err.mapped())
+    const userinfo = req.body
+    const selectSql = `select *from admin where username=?`
+    db.query(selectSql,userinfo.username,(err,results)=>{
+        if(err) return res.mt(err)
+        if(results.length!==1) return res.mt('登陆失败，查无此人!')
+        //比对数据库密码
+        const flag = bcrypt.compareSync(userinfo.password,results[0].password)
+        if(!flag) return res.mt('登陆失败，密码错误!')
+        const user = {...results[0],password:''}
+		// 生成token
+        const tokenStr = jwt.sign(user,config.jwtSecretKey_admin,{
             expiresIn:'2h'
         })
         res.send({

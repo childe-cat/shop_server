@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const expressWs = require('express-ws')
 
 //接受body数据
 const bodyParser = require('body-parser')
@@ -8,10 +9,9 @@ app.use(bodyParser.json())
 //cors跨域
 const cors = require('cors')
 app.use(cors())
-
 //解析表单数据
 app.use(express.urlencoded({
-	extended: false
+	extended: true
 }))
 
 //封装错误中间件
@@ -28,16 +28,26 @@ app.use((req, res, next) => {
 //解析token中间件
 const config = require('./configure')
 const expressJWT = require('express-jwt')
+// 普通用户
 app.use(expressJWT({
 	secret: config.jwtSecretKey
 }).unless({
-	path: [/^\/api/]
+	path: [/^\/api/,/^\/manage/,/^\/ws/]
+}))
+// 管理员
+app.use(expressJWT({
+	secret: config.jwtSecretKey_admin
+}).unless({
+	path: [/^\/api/,/^\/my/,/^\/pay/]
 }))
 
 // express托管静态资源
 app.use('/api', express.static(__dirname + '/static'))
-
 //导入路由模块
+// webSocket服务
+const ws = require('./router_handle/ws')
+expressWs(app)
+app.use('/ws',ws)
 // 用户
 const userRouter = require('./router/user')
 app.use('/api', userRouter)

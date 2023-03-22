@@ -9,6 +9,7 @@ exports.search_order = (req,res) =>{
 		let arr = results.sort((a,b)=>{
 			return b.id - a.id
 		})
+		// 转换时间戳!!!
 		res.send({
 			status:0,
 			message:'获取订单信息成功',
@@ -30,11 +31,12 @@ exports.del_order = (req,res) =>{
 }
 // 生成未处理订单
 exports.add_order = (req,res) =>{
+	const timeout = Date.parse(new Date().toString())/1000
 	const order = {
 		'username':req.user.username,
 		'blurb':req.body.blurb,
 		'money':Number(req.body.money),
-		'time':req.body.time
+		'time':timeout
 	}
 	const sql = "insert into `order` set ?"
 	db.query(sql,order,(err,results)=>{
